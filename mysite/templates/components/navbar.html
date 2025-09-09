@@ -1,0 +1,57 @@
+{% load static %}
+
+<nav class="navbar">
+    <a href="{% url 'home' %}" class="navbar-brand">
+        <div class="navbar-left">
+            <img class="logo" src="{% static 'mysite/assets/logo.png' %}" alt="HoosHousing? Logo"/>
+            <span class="logotext">HoosHousing?</span>
+        </div>
+    </a>
+
+    <!-- Hamburger menu icon -->
+    <div class="hamburger">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </div>
+
+    <div class="navbar-right">
+        {% if user.is_authenticated %}
+            <a href="{% url 'listing_service:property_listing' %}" class="nav-item">Listings</a>
+            <a href="{% url 'listing_service:collection_listing' %}" class="nav-item">Collections</a>
+
+            {% if user.username != 'guest' %}
+                <a href="{% url 'listing_service:my_collections' %}" class="nav-item">My Collections</a>
+                <a href="{% url 'leasing_service:my_leases' %}" class="nav-item">My Leases</a>
+            {% endif %}
+            
+            <div class="dropdown">
+                <button class="dropbtn">
+                    <a href="{% url 'user_service:view_profile' %}" style="display:inline-block;">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image }}" class="profile-pic" alt="Profile Picture">
+                        {% else %}
+                            <img src="{% static 'mysite/assets/default-profile.png' %}" class="profile-pic" alt="Default Profile">
+                        {% endif %}
+                    </a>
+                    <span>{{ user.username|default:"User" }}</span>
+                </button>
+                <div class="dropdown-content">
+                    {% if user.username != 'guest' %}
+                        <a href="{% url 'notification_service:notifications' %}">Notifications</a>
+                        {% if user.role == 'librarian' %}
+                            <a href="{% url 'leasing_service:manage_lease_requests' %}">Lease Requests</a>
+                            <a href="{% url 'listing_service:manage_access_requests' %}">Access Requests</a>
+                            <a href="{% url 'user_service:manage_users' %}">Manage Users</a>
+                        {% endif %}
+                    {% endif %}
+                    <a href="{% url 'account_logout' %}">Sign Out</a>
+                </div>
+            </div>            
+        {% else %}
+            <a href="{% url 'account_login' %}?next={% url 'listing_service:property_listing' %}" class="nav-item">Listings</a>
+            <a href="{% url 'account_login' %}?next={% url 'listing_service:collection_listing' %}" class="nav-item">Collections</a>
+            <a href="{% url 'account_login' %}" class="nav-item">Sign In</a>
+        {% endif %}
+    </div>
+</nav>

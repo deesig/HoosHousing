@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}
+    {% if is_edit %}Edit Collection{% else %}Create Collection{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'listing_service/css/add-property.css' %}">
+<link rel="stylesheet" href="{% static 'listing_service/css/create-collection.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="heading">
+        <h1>{% if is_edit %}Edit Collection{% else %}Create a New Collection{% endif %}</h1>
+    </div>
+
+<form method="POST" action="{% if is_edit %}{% url 'listing_service:edit_collection' collection.id %}{% else %}{% url 'listing_service:create_collection' %}{% endif %}?next={{ next|urlencode }}{% if is_edit %}&edit_mode=true{% endif %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="edit_mode" value="true">
+        <input type="hidden" name="next" value="{{ next }}">
+  
+        <div class="form-container">
+            <div class="form-left">
+                <div class="form-group">
+                    <label for="title">Collection Title:</label>
+                    <input type="text" id="title" name="title" value="{{ collection.title|default:'' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Collection Description:</label>
+                    <textarea id="description" name="description" rows="5" required>{{ collection.description|default:'' }}</textarea>
+                </div>
+
+                {% if request.user.role == "librarian" %}
+                <div class="form-group">
+                    <label for="private">Collection Visibility:</label>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="private" name="private" {% if collection.private %}checked{% endif %}>
+                        <label for="private" id="private-label">Private (librarians only and transfers ownership)</label>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="properties">Select Properties for Your Collection:</label>
+
+                    <div class="input-group mb-2 w-100">
+                        <input
+                                type="text"
+                                id="propertySearch"
+                                class="form-control"
+                                placeholder="Search properties by title…"
+                        >
+                        <button id="propertySearchBtn" class="btn btn-outline-secondary" type="button">Search</button>
+                        <button id="propertyViewAllBtn" class="btn btn-outline-secondary" type="button">View All</button>
+                    </div>
+
+                    <div class="property-selection" id="propertyList">
+                        {% for property in properties %}
+                        <div class="property-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" id="property-{{ property.id }}" name="properties" value="{{ property.id }}" {% if property.id in selected_property_ids %}checked{% endif %}>
+                                <label for="property-{{ property.id }}" class="d-inline" style="font-weight: normal; margin-bottom: 0;">{{ property.title }}</label>
+                            </div>
+                            <a href="{% url 'listing_service:property_details' property.id %}" target="_blank" class="btn btn-primary" style="padding: 3px 10px; font-size: 0.8rem;">View</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="buttons-row">
+                    <button type="submit" class="btn btn-secondary">{% if is_edit %}Update Collection{% else %}Create{% endif %}</button>
+                    <a href="{{ back_url }}" class="btn btn-primary">Back</a>
+                </div>
+            </div>
+
+            <div class="form-right">
+                <div class="image-upload-container">
+                    <label class="upload-instruction">{% if is_edit %}Update{% else %}Add{% endif %} Collection Image</label>
+                    <div class="placeholder-image">
+                        <img src="{% if collection.image %}{{ collection.image }}{% else %}{% static 'mysite/assets/default-collection.png' %}{% endif %}"
+                            alt="Collection Image Preview" id="imagePreview">
+                    </div>
+
+                    <label for="imageUpload" style="margin-top:20px;" class="btn btn-primary">Upload Image</label>
+                    <input type="file" id="imageUpload" name="image" accept="image/*" onchange="previewImage(event)">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="under-form mt-5 mb-2">
+        <div class="info-box">
+            <h4 style="margin-top: 0;">What is a Collection?</h4>
+            <p>Collections allow you to group related properties together for easier discovery and organization.</p>
+
+            <h4>Consider grouping properties by:</h4>
+            <ul>
+                <li>Neighborhoods or locations</li>
+                <li>Price ranges</li>
+                <li>Property types</li>
+                <li>Special features</li>
+            </ul>
+
+            <h4>Collection Visibility</h4>
+            <p>{% if request.user.role == "librarian" %}
+                As a librarian, you can create private collections that are only visible to other librarians.
+                {% else %}
+                Collections you create will be visible to all users.
+                {% endif %}
+            </p>
+
+            {% if is_edit and collection.private %}
+            <div class="alert alert-warning">
+                <strong>Warning:</strong> Making a private collection public will make all its properties visible in other collections.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function () {
+        const output = document.getElementById('imagePreview');
+        output.src = reader.result;
+        output.style.display = 'block';
+    };
+    reader.readAsDataURL(event.target.files[0]);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('propertySearch');
+    const searchBtn = document.getElementById('propertySearchBtn');
+    const viewAllBtn = document.getElementById('propertyViewAllBtn');
+    const propertyList = document.getElementById('propertyList');
+    const form = document.querySelector('form');
+
+    const checkedPropertyIds = new Set();
+
+    const imagePreview = document.getElementById('imagePreview');
+    const imageUpload = document.getElementById('imageUpload');
+    imagePreview.style.cursor = 'pointer';
+    imagePreview.addEventListener('click', function() {
+        imageUpload.click();
+    });
+
+    searchInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchBtn.click();
+        }
+    });
+
+    document.querySelectorAll('.property-item input[type="checkbox"][name="properties"]:checked').forEach(cb => {
+        checkedPropertyIds.add(cb.value);
+    });
+
+    propertyList.addEventListener('change', function(event) {
+        if (event.target.matches('input[type="checkbox"][name="properties"]')) {
+            const id = event.target.value;
+            if (event.target.checked) {
+                checkedPropertyIds.add(id);
+            } else {
+                checkedPropertyIds.delete(id);
+            }
+        }
+    });
+
+    function renderProperties(properties) {
+        propertyList.innerHTML = '';
+
+        properties.forEach(property => {
+            const div = document.createElement('div');
+            div.className = 'property-item d-flex justify-content-between align-items-center';
+
+            div.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" id="property-${property.id}" name="properties" value="${property.id}"
+                        ${checkedPropertyIds.has(String(property.id)) ? 'checked' : ''}>
+                    <label for="property-${property.id}" class="d-inline" style="font-weight: normal; margin-bottom: 0;">
+                        ${property.title}
+                    </label>
+                </div>
+                <a href="/listings/property/${property.id}/" target="_blank"
+                    class="btn btn-primary" style="padding: 3px 10px; font-size: 0.8rem;">View</a>
+            `;
+            propertyList.appendChild(div);
+        });
+    }
+
+    function fetchProperties(query = '') {
+        let url = '/listings/search_properties/';
+        if (query) {
+            url += `?q=${encodeURIComponent(query)}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                renderProperties(data.properties);
+            });
+    }
+
+    searchBtn.addEventListener('click', () => {
+        fetchProperties(searchInput.value);
+    });
+
+    viewAllBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        fetchProperties();
+    });
+
+    form.addEventListener('submit', function(event) {
+        document.querySelectorAll('.property-item input[name="properties"]').forEach(el => el.remove());
+
+        checkedPropertyIds.forEach(id => {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'properties';
+            hiddenInput.value = id;
+            form.appendChild(hiddenInput);
+        });
+    });
+});
+
+document.getElementById('imageUpload').addEventListener('change', async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Only JPG, JPEG, and PNG files are allowed.');
+        event.target.value = '';
+        return;
+    }
+
+    const extension = file.type.split('/')[1];
+    const response = await fetch(`/listings/get_presigned_url/?extension=${extension}`);
+    const data = await response.json();
+
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+
+    const formData = new FormData();
+    Object.entries(data.fields).forEach(([key, value]) => {
+        formData.append(key, value);
+    });
+    formData.append('file', file);
+
+    await fetch(data.url, {
+        method: 'POST',
+        body: formData
+    });
+
+    let existingHiddenInput = document.getElementById('uploadedImageUrlInput');
+    if (!existingHiddenInput) {
+        existingHiddenInput = document.createElement('input');
+        existingHiddenInput.type = 'hidden';
+        existingHiddenInput.name = 'uploaded_image_url';
+        existingHiddenInput.id = 'uploadedImageUrlInput';
+        document.querySelector('form').appendChild(existingHiddenInput);
+    }
+    existingHiddenInput.value = data.full_url;
+
+    const preview = document.getElementById('imagePreview');
+    preview.src = data.full_url;
+    preview.style.display = 'block';
+});
+</script>
+{% endblock %}

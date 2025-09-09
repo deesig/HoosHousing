@@ -1,0 +1,77 @@
+.hero-container {
+	display: flex;
+	justify-content: center;
+	overflow: hidden;
+	width: 100%;
+}
+
+.hero {
+	position: relative;
+	padding: 20px;
+	/* background-color: red; */
+	max-width: 1200px;
+	width: 100%;
+}
+
+.title {
+	font-size: 3.5rem;
+	font-weight: 600;
+	text-align: center;
+	max-width: 600px;
+	margin: 0 auto;
+	margin-top: 1.5rem;
+	/* background-color: blue; */
+	z-index: 2;
+}
+
+.hero h2 {
+	position: relative;
+	text-align: center;
+	font-weight: 400;
+	font-size: 1.5rem;
+	max-width: 600px;
+	margin: 0 auto;
+	/* background-color: red; */
+	z-index: 2;
+}
+
+.hero #hero-img {
+	max-width: 100%;               /* never exceed 80% of width */  
+	max-height: 60vh;             /* never exceed 40% of viewport */  
+	width: auto;                  
+	height: auto;                 
+	object-fit: contain;          /* maintain aspect ratio */     
+	margin: 1rem 0;
+	border-radius: 40px;
+	padding: 1rem;
+	z-index: 1;
+  }
+
+/* reset link styles  */
+
+.text-center a {
+	text-decoration: none;
+	color: inherit;
+}
+
+.text-center a:hover {
+	color: inherit;
+}
+
+.text-center a:active {
+	color: inherit;
+}
+.btn-get-started {
+	border: 1px solid rgb(34,34,34);
+	font-weight: 500;
+}
+
+.btn-get-started:hover {
+	background-color: rgb(240,240,240);
+	border: 1px solid rgb(34,34,34);
+}
+
+.btn-get-started:active {
+	background-color: rgb(230,230,230);
+	border: 1px solid rgb(34,34,34);
+}

@@ -1,0 +1,16 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "PublicReadGetObject",
+        "Effect": "Allow",
+        "Action": "s3:GetObject",
+        "Principal": "*",
+        "Resource": [
+          "arn:aws:s3:::swe-subleasing-app/listing-image/*",
+          "arn:aws:s3:::swe-subleasing-app/profile-image/*"
+        ]
+      }
+    ]
+  }
+  

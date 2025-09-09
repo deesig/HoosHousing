@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load listing_filters %}
+
+{% block head_title %}Collections{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'listing_service/css/listings.css' %}">
+<link rel="stylesheet" href="{% static 'listing_service/css/my-collections.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Collections</h1>
+
+    {% if not user.is_authenticated %}
+    <div class="alert alert-warning">
+        You are viewing as a guest. Only public collections are visible. <a href="{% url 'account_login' %}">Sign
+            in</a> to access private collections.
+    </div>
+    {% endif %}
+
+    <form method="GET" action="{% url 'listing_service:collection_listing' %}" class="row g-2 align-items-center mb-4">
+        <div class="col-12 col-md" style="min-width: 0;">
+            <div class="input-group" style="min-width: 0;">
+            <input type="text" name="q"
+                    class="form-control shadow-sm"
+                    placeholder="Search collections..."
+                    value="{{ request.GET.q }}">
+            </div>
+        </div>
+        <div class="col-12 col-md-auto d-flex align-items-center">
+            <button class="btn btn-primary me-2" type="submit">
+                <i class="fas fa-search me-1"></i> Search
+            </button>
+    
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle me-2"
+                        type="button"
+                        id="sortDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-arrow-up-wide-short me-1"></i> Sort
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                    {% for key,label,arrow in sort_options %}
+                    <li>
+                        <button
+                        class="dropdown-item {% if sort == key %}active{% endif %}"
+                        type="submit"
+                        name="sort"
+                        value="{{ key }}">
+                        {{ label }} {{ arrow }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                </div>
+
+            <a href="{% url 'listing_service:collection_listing' %}" class="btn btn-quaternary">
+                Clear
+            </a>
+        </div>
+      </form>      
+
+      <div class="filter-section mb-4 d-flex align-items-center gap-1">
+        <button id="filter-empty-collections" class="btn btn-primary" style="margin-right: 10px;">
+            <i class="fas fa-eye-slash" style="margin-right: 3px;"></i> Hide Empty Collections
+        </button>
+        {% if request.user.is_authenticated and request.user.role == 'librarian' %}
+        <button id="editCollectionsBtn" class="btn btn-secondary" style="margin-right: 10px;">
+            <i class="fas fa-edit" style="margin-right: 3px;"></i> Edit Collections
+        </button>
+        {% endif %}
+    </div>
+
+    {% if collections %}
+    <div class="owner-section">
+        <div class="row">
+            {% for collection in collections %}
+            <div class="col-md-4 col-lg-3 mb-3 single-collection
+                {% if not collection.has_visible_properties %}empty-collection{% endif %}">
+                <div class="collection-card">
+                    {% if request.user.is_authenticated and request.user.role == 'librarian' %}
+                    <div class="edit-icons" style="display:none;">
+                        <a
+                            href="{% url 'listing_service:edit_collection' collection.id %}?next={{ next_url|urlencode }}&edit_mode=true"
+                            class="edit-icon"
+                        ><i class="fas fa-edit"></i></a>
+                    
+                        <form
+                            method="POST"
+                            action="{% url 'listing_service:delete_collection' collection.id %}?next={{ next_url|urlencode }}&edit_mode=true"
+                        >
+                            {% csrf_token %}
+                          <button class="delete-icon"><i class="fas fa-trash-alt" onclick="return confirm('Are you sure you want to delete this collection?');"></i></button>
+                        </form>
+                      </div>
+                    {% endif %}
+
+                    <div class="collection-info">
+                        <p id="collection-privacy"
+                            class="{% if collection.private %}private-label{% else %}public-label{% endif %}">
+                            {% if collection.private %}Private{% else %}Public{% endif %}
+                        </p>
+                    </div>
+
+                    {% if not collection.private %}
+                        <a href="{% url 'listing_service:collection_details' collection.id %}">
+                    {% elif request.user == collection.owner %}
+                        <a href="{% url 'listing_service:collection_details' collection.id %}">
+                    {% elif request.user.is_authenticated and request.user.role == 'librarian' %}
+                        <a href="{% url 'listing_service:collection_details' collection.id %}">
+                    {% elif request.user.is_authenticated %}
+                        {% with access=collection_access|get_item:collection.id %}
+                            {% if access.has_access %}
+                                <a href="{% url 'listing_service:collection_details' collection.id %}">
+                            {% else %}
+                                <a href="#" onclick="alert('You do not have access to view this private collection.')">
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <a href="#" onclick="alert('You do not have access to view this private collection.')">
+                    {% endif %}
+
+                        {% if collection.image %}
+                            <img src="{{ collection.image }}" alt="{{ collection.title }}" class="collection-img">
+                        {% else %}
+                            <img src="{% static 'mysite/assets/default-collection.png' %}"
+                                 alt="Default Collection Image" class="collection-img">
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="collection-title-author">
+                    <h2 class="collection-title">{{ collection.title }}</h2>
+                    <h6 class="owner-name">{{ group.grouper }}</h6>
+                    <div class="collection-description">
+                        <p>{{ collection.description|truncatechars:35 }}</p>
+                    </div>
+
+                    {% if collection.private %}
+                    {% if request.user.is_authenticated and request.user.role == 'librarian' %}
+                    <a href="{% url 'listing_service:collection_details' collection.id %}"
+                        class="btn btn-sm btn-primary mt-2">View Details</a>
+                    {% elif request.user.is_authenticated %}
+                    {% with access=collection_access|get_item:collection.id %}
+                    {% if access and access|get_item:'has_access' %}
+                    <a href="{% url 'listing_service:collection_details' collection.id %}"
+                        class="btn btn-sm btn-primary mt-2">View Details</a>
+                    {% elif access and access|get_item:'has_requested' %}
+                    <button class="btn btn-sm btn-secondary w-100" style="padding: 0.375rem 0.75rem;" disabled>Access
+                        Requested
+                    </button>
+                    {% else %}
+                    <form method="post" action="{% url 'listing_service:request_collection_access' collection.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-warning w-100" style="padding: 0.375rem 0.75rem;">
+                            Request Access
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% endwith %}
+                    {% else %}
+                    <a href="{% url 'account_login' %}?next={% url 'listing_service:collection_listing' %}"
+                        class="btn btn-sm btn-info mt-2">Login to Request Access</a>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'listing_service:collection_details' collection.id %}"
+                        class="btn btn-sm btn-primary mt-2">View Details</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">No collections available.</div>
+        {% endif %}
+    </div>
+
+    {% block extra_js %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const filterButton = document.getElementById("filter-empty-collections");
+            let filterActive = false;
+
+            filterButton.addEventListener("click", function () {
+                const emptyCollections = document.querySelectorAll(".empty-collection");
+
+                // Toggle visibility of empty collections
+                emptyCollections.forEach((collection) => {
+                    if (filterActive) {
+                        collection.style.display = "block";
+                    } else {
+                        collection.style.display = "none";
+                    }
+                });
+
+                // Update button text and toggle state
+                filterActive = !filterActive;
+                filterButton.innerHTML = filterActive
+                ? '<i class="fas fa-eye" style="margin-right: 3px;"></i> Show Empty Collections'
+                : '<i class="fas fa-eye-slash" style="margin-right: 3px;"></i> Hide Empty Collections';
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editBtn = document.getElementById('editCollectionsBtn');
+            const editIcons = document.querySelectorAll('.edit-icons');
+            const collectionLinks = document.querySelectorAll('.collection-link');
+            let editMode = false;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('edit_mode') === 'true') {
+                editMode = true;
+                editIcons.forEach(icon => {
+                    icon.style.display = 'block';
+                });
+                
+                collectionLinks.forEach(link => {
+                    link.style.pointerEvents = 'none';
+                });
+                
+                editBtn.textContent = 'Finish Editing';
+                editBtn.classList.remove('btn-secondary');
+                editBtn.classList.add('btn-success');
+            }
+
+            editBtn.addEventListener('click', function () {
+                editMode = !editMode;
+
+                editIcons.forEach(icon => {
+                    icon.style.display = editMode ? 'block' : 'none';
+                });
+
+                collectionLinks.forEach(link => {
+                    link.style.pointerEvents = editMode ? 'none' : 'auto';
+                });
+
+                if (editMode) {
+                    editBtn.innerHTML = '<i class="fas fa-check" style="margin-right: 3px;"></i> Finish Editing';
+                    editBtn.classList.remove('btn-secondary');
+                    editBtn.classList.add('btn-success');
+
+                    const newUrl = window.location.pathname + '?edit_mode=true';
+                    history.pushState({}, '', newUrl);
+                } else {
+                    editBtn.innerHTML = '<i class="fas fa-edit" style="margin-right: 3px;"></i> Edit Collections';
+                    editBtn.classList.remove('btn-success');
+                    editBtn.classList.add('btn-secondary');
+
+                    history.pushState({}, '', window.location.pathname);
+                }
+            });
+        });
+    </script>
+    {% endblock %}
+    {% endblock %}

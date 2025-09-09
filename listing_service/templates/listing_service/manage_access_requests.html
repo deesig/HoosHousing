@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}Manage Access Requests{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'listing_service/css/listings.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if request.user.is_authenticated and request.user.role == 'librarian' %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Access Requests</h1>
+        
+    {% if pending_requests %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Collection</th>
+                        <th>Requested On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in pending_requests %}
+                        <tr>
+                            <td>{{ request.user.username }}</td>
+                            <td>{{ request.collection.title }}</td>
+                            <td>{{ request.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'listing_service:manage_access_requests' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form method="post" action="{% url 'listing_service:manage_access_requests' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                    <input type="hidden" name="action" value="deny">
+                                    <button type="submit" class="btn btn-sm btn-danger">Deny</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{% url 'listing_service:my_collections' %}" class="btn btn-primary mb-4">Back to My Collections</a>
+
+
+
+    {% else %}
+        <div class="alert alert-info">No pending access requests.</div>
+    {% endif %}
+</div>
+{% else %}
+<div class="container mt-4">
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">Access Denied</h4>
+        <p>You must be a librarian to access this page.</p>
+        <hr>
+        <p class="mb-0">Please <a href="{% url 'account_login' %}">log in</a> with a librarian account to manage access requests.</p>
+    </div>
+    <a href="{% url 'listing_service:collection_listing' %}" class="btn btn-primary">Return to Collections</a>
+</div>
+{% endif %}
+{% endblock %}

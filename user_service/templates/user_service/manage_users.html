@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'mysite/css/manage.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+  <h1 class="mb-4">Manage Users</h1>
+  
+  <div class="card">
+    <div class="card-body">
+
+      <form method="get" action="{% url 'user_service:manage_users' %}" class="form-inline mb-4">
+        <div class="input-group w-100">
+          <input type="text" name="search" class="form-control shadow-sm" placeholder="Search by username, name, or email..." 
+                 value="{{ request.GET.search|default:'' }}" style="margin-right: 10px;">
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="submit" style="margin-right: 5px;">
+              <i class="fas fa-search"></i> Search
+            </button>
+            <a href="{% url 'user_service:manage_users' %}" class="btn btn-quaternary">
+              Clear
+            </a>
+          </div>
+        </div>
+      </form>
+      
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 60px;"></th>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th class="text-left">Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+              <tr>
+                <td class="text-center align-middle">
+                  {% if user.profile_image %}
+                    <img src="{{ user.profile_image }}" alt="{{ user.username }}" class="profile-image">
+                  {% else %}
+                    <div class="profile-image-placeholder">
+                      {{ user.username|first|upper }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td class="align-middle truncate" title="{{ user.username }}">
+                  {{ user.username|truncatechars:30 }}
+                </td>
+                <td class="align-middle truncate" title="{{ user.first_name }} {{ user.last_name }}">
+                  {% if user.first_name or user.last_name %}
+                    {{ user.first_name }} {{ user.last_name }}
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
+                </td>
+                <td class="align-middle truncate" title="{{ user.email }}">
+                  {{ user.email|truncatechars:30 }}
+                </td>
+                <td class="text-left align-middle">
+                  <span class="badge 
+                    {% if user.role == 'librarian' %}badge-primary
+                    {% elif user.role == 'patron' %}badge-secondary
+                    {% else %}badge-gray{% endif %}">
+                    {{ user.role|title }}
+                  </span>
+                </td>
+                <td class="align-middle">
+                  {% if user.role == "patron" %}
+                    <form method="post" action="{% url 'user_service:update_user_role' user.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="role" value="librarian">
+                      <button type="submit" class="btn btn-sm btn-success">
+                        Promote to Librarian
+                      </button>
+                    </form>
+                  {% else %}
+                    <!-- Leave blank for Librarian and Guest accounts -->
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center">
+                  {% if request.GET.search %}
+                    No users found matching "{{ request.GET.search }}". <a href="{% url 'user_service:manage_users' %}">Clear search</a>
+                  {% else %}
+                    No users found
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}Notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-icon {
+        margin-right: 12px;
+        display: inline-block;
+        width: 24px;
+        text-align: center;
+    }
+
+    .notification-content {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .notification-message {
+        flex-grow: 1;
+    }
+
+    .notification-time {
+        margin-left: 10px;
+        white-space: nowrap;
+    }
+
+    .list-group-item {
+        padding: 12px 15px;
+        border-left: 4px solid transparent;
+    }
+
+    /* Approval styling */
+    .notification-approved {
+        background-color: rgba(40, 167, 69, 0.1);
+        border-left-color: #28a745;
+    }
+
+    .notification-approved .notification-icon {
+        color: #28a745;
+    }
+
+    /* Denial styling */
+    .notification-denied {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left-color: #dc3545;
+    }
+
+    .notification-denied .notification-icon {
+        color: #dc3545;
+    }
+
+    /* Unread notification */
+    .notification-unread {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Notifications</h1>
+
+    {% if notifications %}
+    <ul class="list-group">
+        {% for notification in notifications %}
+        <li class="list-group-item 
+            {% if notification.status == 'approved' %}notification-approved
+            {% elif notification.status == 'denied' %}notification-denied
+            {% elif not notification.is_read %}notification-unread{% endif %}">
+            <div class="notification-content">
+                <div class="notification-icon">
+                    {% if notification.notification_type == 'lease' %}
+                    <i class="fas fa-home"></i>
+                    {% elif notification.notification_type == 'collection' %}
+                    <i class="fas fa-book-open"></i>
+                    {% endif %}
+                </div>
+                <div class="notification-message">
+                    {{ notification.message }}
+                </div>
+                <small class="notification-time text-muted">
+                    {{ notification.created_at|date:"M d, Y H:i" }}
+                </small>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="alert alert-info">You have no notifications.</div>
+    {% endif %}
+</div>
+{% endblock %}

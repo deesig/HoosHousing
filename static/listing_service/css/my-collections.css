@@ -1,0 +1,155 @@
+.single-collection {
+    margin-bottom: 2rem;
+    min-width: 300px;
+}
+
+.collection-card {
+    position: relative;
+    transition: transform 0.3s ease;
+    margin-bottom: 20px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.collection-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collection-img {
+    height: 180px;
+    object-fit: cover;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    width: 100%;
+}
+
+.collection-info {
+    padding: 12px;
+    position: absolute;
+    background-color: #CCC;
+    padding: 0.2rem 0.6rem;
+    margin: 0.2rem;
+    display: flex;
+    border-radius: 5px;
+    justify-content: center;
+    align-items: center;
+}
+
+#collection-privacy {
+    margin: 0;
+    font-size: 0.7rem;
+}
+
+.collection-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.collection-owner-name {
+    font-size: 0.875rem;
+    color: var(--text);
+}
+
+.collection-description p {
+    margin-bottom: 0.5rem;
+}
+
+.collection-info p {
+    font-size: 0.9rem;
+    color: rgb(90,90,90);
+}
+
+.alert-info {
+    text-align: center;
+}
+
+.form-control {
+    border-radius: 6px !important;
+}
+
+.edit-icons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+.edit-icon {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    background-color: var(--secondary);
+    width: 36px;  
+    height: 36px; 
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    padding: 0;  
+    text-decoration: none;
+    z-index: 10;
+  }
+  
+  .edit-icon:hover {
+    background-color: #fff;
+    color: var(--secondary);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .delete-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #b80000;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    padding: 0; 
+    text-decoration: none;
+    z-index: 10;
+  }
+  
+  .delete-icon:hover {
+    background-color: #fff;
+    color: #b80000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+.btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-access-request {
+    background-color: #fff;
+    border-color: var(--secondary);
+    color: var(--secondary);
+}
+
+.btn-access-request:hover {
+    background-color: #fff;
+    border-color: var(--secondary);
+    color: var(--secondary);
+}

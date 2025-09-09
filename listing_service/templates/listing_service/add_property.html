@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}
+    {% if is_edit %}
+        HoosHousing? - Edit Property
+    {% else %}
+        HoosHousing? - Add Property
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'listing_service/css/add-property.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="heading">
+    <h1>{% if is_edit %}Edit{% else %}Add{% endif %} Property</h1>
+  </div>
+
+  <form method="POST" action="{% if is_edit %}{% url 'listing_service:edit_property' property.id %}{% else %}{% url 'listing_service:add_property' %}{% endif %}" enctype="multipart/form-data">
+
+    {% csrf_token %}
+    {% if next %}
+      <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+    <div class="form-container">
+      {% comment %} Left Side - Form Fields  {% endcomment %}
+      <div class="form-left">
+        <div class="form-group">
+          <label for="title">Property Title:</label>
+          <input type="text" id="title" name="title" value="{{ property.title|default:'' }}" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="location">Property Address:</label>
+            <input type="text" id="location" name="location" value="{{ property.location|default:'' }}" required>
+          </div>
+
+          <div class="form-group">
+            <label for="price">Price Per Month:</label>
+              <input
+                      type="number"
+                      id="price"
+                      name="price"
+                      min="0.01"
+                      max="99999999.99"
+                      step="0.01"
+                      pattern="^(?!0\d)\d+(\.\d{1,2})?$"
+                      value="{{ property.price|default:'' }}"
+                      required
+              >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="property_type">Property Type:</label>
+          <select name="property_type" id="property_type" required>
+            <option value="Apartment" {% if property.property_type == 'Apartment' %}selected{% endif %}>Apartment</option>
+            <option value="Condo" {% if property.property_type == 'Condo' %}selected{% endif %}>Condo</option>
+            <option value="Room" {% if property.property_type == 'Room' %}selected{% endif %}>Room</option>
+            <option value="House" {% if property.property_type == 'House' %}selected{% endif %}>House</option>
+            <option value="Other" {% if property.property_type == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="region">Region (optional):</label>
+          <select name="region" id="region">
+            <option value="" {% if not property.region %}selected{% endif %}>Select a region</option>
+            <option value="central_grounds"   {% if property.region == 'central_grounds'   %}selected{% endif %}>Central Grounds</option>
+            <option value="north_grounds"     {% if property.region == 'north_grounds'     %}selected{% endif %}>North Grounds</option>
+            <option value="jpa"               {% if property.region == 'jpa'               %}selected{% endif %}>Jefferson Park Avenue</option>
+            <option value="rugby_corridor"    {% if property.region == 'rugby_corridor'    %}selected{% endif %}>Rugby Rd Corridor</option>
+            <option value="university_corner" {% if property.region == 'university_corner' %}selected{% endif %}>University Corner</option>
+            <option value="downtown_mall"     {% if property.region == 'downtown_mall'     %}selected{% endif %}>Downtown Mall</option>
+            <option value="barracks_road"     {% if property.region == 'barracks_road'     %}selected{% endif %}>Barracks Road Area</option>
+            <option value="frys_spring"       {% if property.region == 'frys_spring'       %}selected{% endif %}>Fry’s Spring</option>
+            <option value="greenbrier"        {% if property.region == 'greenbrier'        %}selected{% endif %}>Greenbrier / Barracks West</option>
+            <option value="pantops"           {% if property.region == 'pantops'           %}selected{% endif %}>Pantops & Meadow Creek</option>
+            <option value="shadwell"          {% if property.region == 'shadwell'          %}selected{% endif %}>Shadwell & Ivy</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="proximity">Proximity (optional):</label>
+          <select name="proximity" id="proximity">
+            <option value="" {% if not property.proximity %}selected{% endif %}>Select proximity</option>
+            <option value="on_grounds"    {% if property.proximity == 'on_grounds'    %}selected{% endif %}>On‑Grounds Housing</option>
+            <option value="within_0_5_mi" {% if property.proximity == 'within_0_5_mi' %}selected{% endif %}>Within 0.5 mi from Grounds</option>
+            <option value="0_5_to_1_mi"   {% if property.proximity == '0_5_to_1_mi'   %}selected{% endif %}>0.5–1 mi from Grounds</option>
+            <option value="1_to_2_mi"     {% if property.proximity == '1_to_2_mi'     %}selected{% endif %}>1–2 mi from Grounds</option>
+            <option value="charlottesville"{% if property.proximity == 'charlottesville' %}selected{% endif %}>Charlottesville City</option>
+            <option value="albemarle"     {% if property.proximity == 'albemarle'     %}selected{% endif %}>Albemarle County</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Property Description:</label>
+          <textarea id="description" name="description" rows="5" required>{{ property.description|default:'' }}</textarea>
+        </div>
+
+        <div class="buttons-row">
+          <button type="submit" style="margin-right: 10px;" class="btn-secondary">{% if is_edit %}Update{% else %}Add{% endif %} Property</button>
+        
+          {% if is_edit %}
+            {% if next %}
+              <a href="{{ next }}" class="btn-primary">Back</a>
+            {% else %}
+              <a href="{% url 'listing_service:property_listing' %}?edit_mode=true" class="btn-primary">Back</a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'listing_service:property_listing' %}" class="btn-primary">Back</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% comment %} Right Side - Upload Image  {% endcomment %}
+      <div class="form-right">
+        <div class="image-upload-container">
+          <label class="upload-instruction">{% if is_edit %}Update{% else %}Add{% endif %} Property Image</label>
+          <div class="placeholder-image">
+            <img src="{% if property.image %}{{ property.image }}{% else %}{% static 'mysite/assets/default-property.png' %}{% endif %}" alt="Property Image Preview" id="imagePreview">
+          </div>
+
+          <label for="imageUpload" style="margin-top:20px;" class="btn btn-primary">Upload Image</label>
+          <input type="file" id="imageUpload" name="image" accept="image/*" onchange="previewImage(event)">
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      const output = document.getElementById('imagePreview');
+      output.src = reader.result;
+      output.style.display = 'block';
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
+  const img = document.getElementById('imagePreview'); //adding image upload functionality
+  img.style.cursor = 'pointer';
+
+  img.addEventListener('click', () => {
+    document.getElementById('imageUpload').click();
+  });
+
+const textarea = document.getElementById('description');
+  const maxLength = 5000;
+  let lastLength = textarea.value.length;
+
+  textarea.addEventListener('input', function () {
+    if (textarea.value.length > maxLength) {
+      alert('Description cannot exceed 5000 characters.');
+      textarea.value = textarea.value.substring(0, maxLength);
+      textarea.scrollTop = textarea.scrollHeight;
+    }
+    lastLength = textarea.value.length;
+  });
+
+const priceInput = document.getElementById('price');
+
+  priceInput.addEventListener('input', function () {
+    let value = priceInput.value;
+
+    const parts = value.split('.');
+    let integerPart = parts[0].replace(/^0+(?!$)/, '');
+    let decimalPart = parts[1] || '';
+
+    if (decimalPart.length > 2) {
+      decimalPart = decimalPart.slice(0, 2);
+    }
+
+    const cleaned = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+
+    priceInput.value = cleaned;
+  });
+
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}HoosHousing? | Subleasing Simplified{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'mysite/css/landing.css' %}">
+{% endblock %}
+
+{% block content %}
+  <section class="hero-container">
+    <div class="hero">
+      <h1 class="title">
+        Your Home From Home Starts Here
+      </h1>
+      <div class="text-center">
+        <img id="hero-img" src="{% static 'mysite/assets/hero.jpg' %}" />
+      </div>
+      <div class="text-center" style="clear: both;">
+        {% if user.is_authenticated %}
+          <a href="{% url 'listing_service:property_listing' %}"><button class="btn btn-get-started mt-3">Get Started!</button></a>
+        {% else %}
+          <a href="{% url 'account_login' %}"><button class="btn btn-get-started mt-3">Get Started!</button></a>
+        {% endif %}
+      </div>
+      
+
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

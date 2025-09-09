@@ -1,0 +1,49 @@
+name: Django CI
+on:
+  push:
+    branches: [ main, dev, fix-routes, fix-actions, implement-styles ]
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+jobs:
+  test-django-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.13.1'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run migrations
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET_KEY: ${{ secrets.GOOGLE_SECRET_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          WALKSCORE_API_KEY: ${{ secrets.WALKSCORE_API_KEY }}
+        run: |
+          python manage.py migrate
+      - name: User-service Tests # Run the User-service tests 
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DATABASE_URL: '' # empty to use SQLite
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET_KEY: ${{ secrets.GOOGLE_SECRET_KEY }}
+          WALKSCORE_API_KEY: ${{ secrets.WALKSCORE_API_KEY }}
+        run: |
+          python manage.py test user_service
+      - name: Listing-service Tests # Run the Listing-service tests
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DATABASE_URL: '' # empty to use SQLite
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET_KEY: ${{ secrets.GOOGLE_SECRET_KEY }}
+          WALKSCORE_API_KEY: ${{ secrets.WALKSCORE_API_KEY }}
+        run: |
+          python manage.py test listing_service

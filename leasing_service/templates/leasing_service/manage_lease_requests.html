@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}Manage Lease Requests{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'listing_service/css/listings.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if request.user.is_authenticated and request.user.role == 'librarian' %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Lease Requests</h1>
+
+    {# Search bar #}
+    <form method="get" class="row g-2 align-items-end mb-4">
+        <div class="col flex-grow-1" style="min-width: 200px;">
+            <input
+                    type="text" name="q"
+                    class="form-control"
+                    placeholder="Search by user or property title"
+                    value="{{ q }}"
+            >
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+        </div>
+    </form>
+
+    {# 1) Pending Requests #}
+    <h3>Pending Requests</h3>
+    {% if pending_requests %}
+    <div class="table-responsive mb-4">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>Property</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for r in pending_requests %}
+            <tr>
+                <td>{{ r.user.username }}</td>
+                <td>{{ r.property.title }}</td>
+                <td>{{ r.start_date|date:"M d, Y" }}</td>
+                <td>{{ r.end_date|date:"M d, Y" }}</td>
+                <td>{{ r.status }}</td>
+                <td>
+                    <form method="post" action="{% url 'leasing_service:manage_lease_requests' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="lease_request_id" value="{{ r.id }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'leasing_service:manage_lease_requests' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="lease_request_id" value="{{ r.id }}">
+                        <input type="hidden" name="action" value="deny">
+                        <button type="submit" class="btn btn-sm btn-danger">Deny</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    {% else %}
+    <div class="alert alert-info mb-4">No pending lease requests.</div>
+    {% endif %}
+
+    {# 2) History Requests (Collapse) #}
+    <h3
+            class="mb-2 clickable-header"
+            data-bs-toggle="collapse"
+            data-bs-target="#leaseHistory"
+            aria-expanded="false"
+            aria-controls="leaseHistory"
+    >
+        Lease Request History ({{ history_requests.count }})
+    </h3>
+    <div class="collapse" id="leaseHistory">
+        {% if history_requests %}
+        <div class="table-responsive mb-4">
+            <table class="table table-striped">
+                <thead class="table-light">
+                <tr>
+                    <th>User</th>
+                    <th>Property</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                    <th>Processed At</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for r in history_requests %}
+                <tr>
+                    <td>{{ r.user.username }}</td>
+                    <td>{{ r.property.title }}</td>
+                    <td>{{ r.start_date|date:"M d, Y" }}</td>
+                    <td>{{ r.end_date|date:"M d, Y" }}</td>
+                    <td>{{ r.status }}</td>
+                    <td>{{ r.updated_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-secondary">No history requests.</div>
+        {% endif %}
+    </div>
+    <div class="mt-4">
+        <a href="{% url 'listing_service:property_listing' %}" class="btn btn-primary">
+            Back to Properties
+        </a>
+    </div>
+</div>
+
+{% else %}
+<div class="container mt-4">
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">Access Denied</h4>
+        <p>You must be a librarian to access this page.</p>
+        <hr>
+        <p>Please <a href="{% url 'account_login' %}">log in</a> with a librarian account.</p>
+    </div>
+    <a href="{% url 'listing_service:property_listing' %}" class="btn btn-primary">Return to Properties</a>
+</div>
+{% endif %}
+{% endblock %}

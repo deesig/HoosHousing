@@ -1,0 +1,130 @@
+.container {
+	max-width: 1200px;
+	/* background-color: blue; */
+	margin: 0 auto;
+	padding: 20px;
+}
+
+.heading h1 {
+	text-align: center;
+	font-weight: 600;
+	margin-bottom: 30px;
+}
+
+form {
+	display: flex;
+	justify-content: center;
+}
+
+.form-container {
+	display: flex;
+	justify-content: center;
+	max-width: 1200px;
+	width: 100%;
+	gap: 1rem;
+	/* background-color: red; */
+}
+
+.form-left {
+	flex: 1;
+}
+
+.form-right {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+label {
+	color: var(--text);
+	font-weight: 400;
+}
+
+input, textarea, select {
+	background-color: #eee;
+}
+
+.image-upload-container {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.placeholder-image {
+	width: 400px;
+	height: 400px;
+	/* display: flex; */
+	overflow: hidden;
+	background-color: #f9f9f9;
+	border-radius: 20px;
+}
+
+#imagePreview {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.form-row {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 20px;
+}
+
+.form-group {
+	margin-bottom: 20px;
+	width: 100%;
+}
+
+label {
+	display: block;
+	margin-bottom: 5px;
+	font-weight: bold;
+}
+
+input, select, textarea {
+	width: 100%;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+.btn-primary,
+
+.btn-secondary {
+  display: inline-block;
+  padding: 0.5rem 2rem;
+  cursor: pointer;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background-color: white;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: white;
+  border-color: var(--secondary);
+}
+
+.btn-secondary:hover {
+  background-color: white;
+  color: var(--secondary);
+  border-color: var(--secondary);
+}
+
+#imageUpload {
+	display: none;
+}

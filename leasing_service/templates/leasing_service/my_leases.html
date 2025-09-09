@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}My Leases{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'listing_service/css/listings.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">My Leases</h1>
+    {% if leases %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lease in leases %}
+                <tr>
+                    <td>{{ lease.property.title }}</td>
+                    <td>{{ lease.start_date|date:"M d, Y" }}</td>
+                    <td>{{ lease.end_date|date:"M d, Y" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'leasing_service:cancel_lease' lease.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">Cancel Lease</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <a href="{% url 'listing_service:property_listing' %}" class="btn btn-primary mb-4">Browse Properties</a>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You are not leasing any properties at the moment.</p>
+    </div>
+    <a href="{% url 'listing_service:property_listing' %}" class="btn btn-primary">Browse Available Properties</a>
+    {% endif %}
+
+    {% if lease_requests %}
+    <h3 class="mb-4 mt-4">My Requested Leases</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lr in lease_requests %}
+                <tr>
+                    <td>{{ lr.property.title }}</td>
+                    <td>{{ lr.start_date|date:"M d, Y" }}</td>
+                    <td>{{ lr.end_date|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

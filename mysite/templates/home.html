@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subleasing App</title>
+  </head>
+  <body>
+    {% load socialaccount %}
+
+    <h1>Welcome to Our Subleasing App!</h1>
+    <p>This is the home page.</p>
+
+    {% if user.is_authenticated %}
+    <p>Hi, {{ user.username }}! You are logged in.</p>
+    <a href="{% url 'account_logout' %}"><button>Logout</button></a>
+    <a href="{% url 'listing_service:property_listing' %}"><button>View Properties</button></a>
+    {% else %}
+    <a href="{% provider_login_url 'google' process='login' %}">
+      <button>Login with Google</button>
+    </a>
+    {% endif %}
+  </body>
+</html>

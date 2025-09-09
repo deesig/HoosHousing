@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}
+  Edit Profile | HoosHousing?
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <style>
+    .profile-container {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-center">
+              <h2 class="mb-0">Edit Profile</h2>
+            </div>
+          </div>
+          <div class="card-body">
+            <form method="post" enctype="multipart/form-data" action="{% url 'user_service:edit_profile' %}" novalidate>
+              {% csrf_token %}
+
+              <div class="bg-light p-3 rounded mb-4">
+                <div class="mb-2">
+                  <span class="fw-bold">Current username:</span>
+                  <span class="ms-2">{{ user.username }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="fw-bold">Current email:</span>
+                  <span class="ms-2">
+                    {% if user.email %}
+                      {{ user.email }}
+                    {% else %}
+                      Not provided
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="mb-2">
+                  <span class="fw-bold">Date Joined:</span>
+                  <span class="ms-2">{{ user.date_joined|date:'F d, Y' }}</span>
+                </div>
+                <div class="mb-2">
+                    <span class="fw-bold">Role:</span>
+                    <span class="ms-2">{{ user.role|title }}</span>
+                  </div>
+              </div>
+
+              <div class="text-center mb-4 d-flex flex-column justify-content-center align-items-center">
+                <img id="profileImagePreview" 
+                     src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'mysite/assets/default-profile.png' %}{% endif %}" 
+                     alt="Profile Image" 
+                     class="rounded-circle border shadow-sm mb-3" 
+                     width="150" 
+                     height="150" 
+                     style="object-fit: cover;" />
+              
+                <div class="mb-3">
+                  <label for="profileImage" class="form-label d-block">Profile Image</label>
+                  <input class="form-control" type="file" id="profileImage" name="profile_image" accept="image/*" onchange="previewImage(event)" />
+                </div>
+                <button type="submit" class="btn btn-outline-danger btn-sm" formaction="{% url 'user_service:reset_profile_image' %}" formmethod="post" formnovalidate> Reset to Default </button>
+              </div>
+
+              <div class="mb-3">
+                <label for="username" class="form-label">New Username</label>
+                <input type="text" class="form-control" name="username" id="username" value="{{ user.username }}" />
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="first_name" class="form-label">First Name</label>
+                  <input type="text" class="form-control" name="first_name" id="first_name" value="{{ user.first_name }}" />
+                </div>
+                <div class="col-md-6">
+                  <label for="last_name" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" name="last_name" id="last_name" value="{{ user.last_name }}" />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="newPassword" class="form-label">New Password</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="newPassword" name="password" />
+                  <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility()"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" id="confirmNewPassword" name="confirm_password" />
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'user_service:view_profile' %}" class="btn btn-secondary">Back to Profile</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    // Toggle password visibility
+    const togglePasswordVisibility = () => {
+      const passwordInput = document.getElementById('newPassword')
+      const confirmPasswordInput = document.getElementById('confirmNewPassword')
+      const toggleBtn = document.getElementById('togglePasswordBtn')
+      const eyeIcon = toggleBtn.querySelector('i')
+    
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text'
+        confirmPasswordInput.type = 'text'
+        eyeIcon.classList.remove('bi-eye')
+        eyeIcon.classList.add('bi-eye-slash')
+      } else {
+        passwordInput.type = 'password'
+        confirmPasswordInput.type = 'password'
+        eyeIcon.classList.remove('bi-eye-slash')
+        eyeIcon.classList.add('bi-eye')
+      }
+    }
+    
+    const previewImage = (event) => {
+        const imagePreview = document.getElementById('profileImagePreview');
+        const file = event.target.files[0];
+        
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      
+      
+  </script>
+{% endblock %}

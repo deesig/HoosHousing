@@ -1,0 +1,66 @@
+.form-control {
+    border-radius: 6px !important;
+}
+
+.btn {
+    border-radius: 4px;
+}
+
+.form-control {
+    margin-right: 10px;
+}
+
+.btn-primary {
+    margin-right: 5px;
+}
+
+.btn-success {
+    background-color: #fff;
+    border-color: var(--secondary);
+    color: var(--secondary);
+}
+
+.btn-success:hover {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    color: #fff;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .badge-primary {
+    background-color: var(--secondary);
+  }
+  .badge-secondary {
+    background-color: var(--primary);
+  }  
+  .badge-gray {
+    background-color: #b5b5b5;
+    color: white;
+  }
+  .input-group .btn {
+    z-index: 0;
+  }
+
+  /* Profile image styling */
+  .profile-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  /* Placeholder for users without profile images */
+  .profile-image-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }

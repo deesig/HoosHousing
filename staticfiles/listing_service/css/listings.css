@@ -1,0 +1,154 @@
+.edit-icon {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    background-color: var(--secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    padding: 0;
+    text-decoration: none;
+    z-index: 10;
+}
+
+.edit-icon:hover {
+    background-color: #fff;
+    color: var(--secondary);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.delete-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #b80000;
+    width: 36px; /* Fixed width */
+    height: 36px; /* Equal to width for perfect circle */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    padding: 0;
+    text-decoration: none;
+    z-index: 10;
+}
+
+.delete-icon:hover {
+    background-color: #fff;
+    color: #b80000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+
+.form-control {
+    border-radius: 6px !important;
+}
+
+.property-card {
+    height: 100%;
+    transition: transform 0.3s ease;
+    margin-bottom: 20px;
+    cursor: pointer;
+    position: relative;
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+}
+
+.property-img {
+    height: 180px;
+    object-fit: cover;
+    border-radius: 20px;
+    width: 100%;
+}
+
+.property-info {
+    padding: 12px;
+}
+
+.property-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.property-location {
+    color: rgb(90, 90, 90);
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.property-rating {
+    color: #ffc107;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+}
+
+.property-description {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.property-price {
+    font-weight: 600;
+    font-size: 1rem;
+    color: rgb(50, 50, 50);
+}
+
+.dropdown-menu-columns {
+    display: none;
+}
+
+.dropdown-menu-columns.show {
+    display: flex;
+    min-width: 680px;
+}
+
+h3.clickable-header {
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: text-decoration 0.2s !important;
+}
+
+h3.clickable-header:hover {
+  text-decoration: underline !important;
+}
+
+/* override z-index  */
+#sortDropdown {
+    z-index: 1 !important;
+}
+.btn i {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.btn.btn-primary {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.75rem;
+}

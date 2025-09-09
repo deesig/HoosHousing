@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}Collection Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'listing_service/css/listings.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5"> <!-- Added mb-5 class for bottom margin -->
+    <!-- Collection Information Section -->
+    <div class="collection-info-section mb-4">
+        <h1 class="mb-3">{{ collection.title }}</h1>
+        <p><strong>Description:</strong> {{ collection.description }}</p>
+        <p><strong>Created by:</strong> {{ collection.owner }}</p>
+        <p><strong>Privacy:</strong> {% if collection.private %}Private{% else %}Public{% endif %}</p>
+    </div>
+
+    <!-- Properties Section -->
+    <h2 class="mb-4">Properties in this Collection:</h2>
+    <div class="row">
+        {% for cp in visible_properties %}
+        {% with property=cp.property %}
+        <div class="col-md-4 col-lg-3 mb-3">
+            <a href="{% url 'listing_service:property_details' property.id %}" class="text-decoration-none text-dark">
+                <div class="property-card">
+                    {% if property.image %}
+                    <img src="{{ property.image }}" alt="{{ property.title }}" class="property-img">
+                    {% else %}
+                    <img src="{% static 'mysite/assets/default-property.jpg' %}" alt="Default Property Image"
+                        class="property-img">
+                    {% endif %}
+
+                    <div class="property-info">
+                        <h2 class="property-title">{{ property.title }}</h2>
+                        <p class="property-location">{{ property.location }}</p>
+
+                        <div class="property-rating">
+                            {% for i in '12345' %}
+                            {% if property.average_rating|floatformat == i|stringformat:'s' %}
+                            <i class="fas fa-star"></i>
+                            {% elif property.average_rating|floatformat > i|stringformat:'s' %}
+                            <i class="fas fa-star"></i>
+                            {% elif property.average_rating|floatformat > i|add:'-0.5'|stringformat:'s' %}
+                            <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                            <i class="far fa-star"></i>
+                            {% endif %}
+                            {% endfor %}
+                            <small class="text-muted">{{ property.average_rating }}</small>
+                            <small class="text-muted">({{ property.review_count }})</small>
+                        </div>
+
+                        <p class="property-description">{{ property.description|truncatechars:45 }}</p>
+                        <p class="property-price">${{ property.price }} month</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">No properties in this collection.</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if request.user.role == 'librarian' and collection.private %}
+    <hr>
+    <h3>Patrons with Access</h3>
+    <ul class="list-group mb-4">
+        {% for access in patrons_with_access %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ access.user.get_full_name|default:access.user.username }}
+            <form method="post"
+                action="{% url 'listing_service:revoke_collection_access' collection.id access.user.id %}"
+                style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
+            </form>
+        </li>
+        {% empty %}
+        <li class="list-group-item">No patrons currently have access.</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="mt-4 mb-5 pb-4">
+        {% if from_my_collections %}
+        <a href="{% url 'listing_service:my_collections' %}" class="btn btn-primary">Back to My Collections</a>
+        {% else %}
+        <a href="{% url 'listing_service:collection_listing' %}" class="btn btn-primary">Back to Collections</a>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

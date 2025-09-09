@@ -1,0 +1,505 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %} Property Details {% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'listing_service/css/property-details.css' %}">
+    <link rel="stylesheet" href="{% static 'listing_service/css/customdate.css' %}">
+{% endblock %}
+
+{% block head_extra_js %}
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+{% endblock %}
+
+{% block content %}
+
+{% if request.user.is_authenticated and request.user.role == 'librarian' %}
+    <div class="container mt-3">
+        <a href="{% url 'listing_service:edit_property' details.id %}?next={% url 'listing_service:property_details' details.id %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-edit"></i> Edit Property
+        </a>
+        <form method="post"
+        action="{% url 'listing_service:delete_property' details.id %}?next={% url 'listing_service:property_listing' %}"
+        style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this property?');">
+                <i class="fas fa-trash-alt"></i> Delete Property
+            </button>
+        </form>
+    </div>
+{% endif %}
+
+<div class="container mt-4">
+    {% comment %} {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    {% endif %} {% endcomment %}
+    <div class="card mb-3 property-card">
+        <div class="row g-0">
+            <div class="col-md-4 property-image">
+                <img src="{% if details.image %}{{ details.image }}{% else %}{% static 'mysite/assets/property-placeholder.png' %}{% endif %}" alt="{{ details.title }}" class="img-fluid" data-bs-toggle="modal" data-bs-target="#imageModal" onerror="this.onerror=null;this.src='{% static 'mysite/assets/property-placeholder.png' %}';">
+            </div>
+
+            <!-- Fullscreen Image Modal -->
+            <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imageModalLabel">{{ details.title }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="{% if details.image %}{{ details.image }}{% else %}{% static 'mysite/assets/property-placeholder.png' %}{% endif %}" alt="{{ details.title }}" class="img-fluid" onerror="this.onerror=null;this.src='{% static 'mysite/assets/property-placeholder.png' %}';" >
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h1 class="card-title">{{ details.title }}</h1>
+                    <p class="card-text price-text">${{ details.price }}<span id="price-text"> / month</span></p>
+                    <p class="card-text">{{ details.location }}</p>
+                    {% for i in "12345" %}
+                        {% if average_rating|floatformat == i %}
+                            <i class="fas fa-star"></i>
+                        {% elif average_rating|floatformat > i %}
+                            <i class="fas fa-star"></i>
+                        {% elif average_rating|floatformat > i|add:"-0.5" %}
+                            <i class="fas fa-star-half"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    ({{ average_rating|default:"0.0" }})
+
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-1 mb-1">
+                          {{ details.property_type }}
+                        </span>
+                      
+                        {% if details.region %}
+                          <span class="badge bg-success me-1 mb-1">
+                            {{ details.region }}
+                          </span>
+                        {% endif %}
+                      
+                        {% if details.proximity %}
+                          <span class="badge bg-warning me-1 mb-1">
+                            {{ details.proximity }}
+                          </span>
+                        {% endif %}
+                      </div>
+                                          
+                    <p class="card-text">
+                        <span class="badge bg-light text-dark">
+                          <i class="fas fa-user-circle me-1"></i> Submitted by {{ details.owner }}
+                        </span>
+                      </p>
+                      
+                    <p class="card-text"><strong>Description:</strong> {{ details.description }}</p>
+                    
+                    {% if not user.is_guest %}
+                    
+                        <div id="lease-request-form">
+                            <h4>Request to Lease</h4>
+                            <form method="post" action="{% url 'leasing_service:submit_lease_request' details.id %}">
+                                {% csrf_token %}
+                                <div class="date-icon">
+                                    <input type="text" id="daterange" name="daterange" class="form-control"/>
+                                    <i id="calendar-icon" class="fa-solid fa-calendar-days"></i>
+                                </div>
+                                <!-- Start Date Field -->
+                                <div class="form-group">
+                                    <label for="start_date">Start Date:</label>
+                                    <input type="text" id="start_date" name="start_date" class="form-control daterangepicker-display" required readonly>
+                                </div>
+
+                                <!-- End Date Field -->
+                                <div class="form-group">
+                                    <label for="end_date">End Date:</label>
+                                    <input type="text" id="end_date" name="end_date" class="form-control daterangepicker-display" required readonly>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary mt-2">Submit Lease Request</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <a class="btn btn-warning" href="{% url 'account_logout' %}"><strong>Sign in to request a lease</strong></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="map-container">
+            {% if details.easter %}
+                <h2>Invalid Location... Here's a random one.</h2>
+            {% else %}
+                <h2>Location</h2>
+            {% endif %}
+            
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <div class="map-walkscore-container">
+        {% comment %} Transit Score Section {% endcomment %}
+        <div class="walk-score-container mt-4">
+            <h2>Around Town</h2>
+            <div class="row scores">
+                <div class="card p-3 col-sm score">
+                    <!-- Walk Score -->
+                    <span class="walk-score-label">Walk Score&reg;</span>
+                    <div class="walk-score">
+                        <div class="walk-score-badge score-badge" id="walk-score">--</div>
+                        <div id="walk-score-signal"></div>
+                    </div>
+                </div>
+                <div class="card p-3 col-sm score">
+                    <!-- Bike Score -->
+                    <span class="bike-score-label">Bike Score&reg;</span>
+                    <div class="bike-score">
+                        <div class="bike-score-badge score-badge" id="bike-score">--</div>
+                        <div id="bike-score-signal"></div>
+                    </div>
+                </div>
+                <div class="card p-3 col-sm score">
+                    <!-- Transit Score -->
+                    <span class="transit-score-label">Transit Score&reg;</span>
+                    <div class="transit-score">
+                        <div class="transit-score-badge score-badge" id="transit-score">--</div>
+                        <div id="transit-score-signal"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div id="reviews-section">
+        {% if not user.is_guest %}
+        <div class="review-form-container">
+            <h3>{% if user_review %}Edit Your Review{% else %}Leave a Review{% endif %}</h3>
+            <form class="review-form" method="POST" action="{% if user_review %}{% url 'review_service:edit_review' user_review.id %}{% else %}{% url 'review_service:add_review' details.id %}{% endif %}#reviews-section">
+                {% csrf_token %}
+
+                <div>
+                    <label for="rating"><strong>Rating:</strong></label>
+                    <select name="rating" id="rating" required>
+                        {% for point in rating_choices %}
+                            <option value="{{ point }}"
+                            {% if user_review and user_review.rating == point %}selected{% endif %}>{{ point }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <textarea name="content" rows="4" cols="60" placeholder="Write your review here..."
+                    required>{% if user_review %}{{ user_review.content }}{% endif %}</textarea><br>
+                </div>
+
+                <button type="submit">{% if user_review %}Update Review{% else %}Submit{% endif %}</button>
+            </form>
+        </div>
+        {% else %}
+        <a class="btn btn-warning" href="{% url 'account_logout' %}"><strong>Sign in to leave a review</strong></a>
+        {% endif %}
+
+        <hr>
+        {% if reviews %}
+        <div class="reviews-container">
+            <div class="reviews-header">
+                <h3>Reviews</h3>
+                <div class="reviews-average-stars">
+                    {% for i in "12345" %}
+                            {% if average_rating|floatformat == i|stringformat:"s" %}
+                                <i class="fas fa-star"></i>
+                            {% elif average_rating|floatformat > i|stringformat:"s" %}
+                                <i class="fas fa-star"></i>
+                            {% elif average_rating|floatformat > i|add:"-0.5"|stringformat:"s" %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                    {% endfor %}
+                    {% if average_rating == 'N/A' %}
+                    0.0
+                    {% else %}
+                    ({{ average_rating }})
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="reviews-grid">
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <strong>{{ review.user.username }}</strong>
+                        <div class="review-rating">
+                            {% for i in details.review_range %}
+                            {% with current_star=forloop.counter %}
+                            {% if review.rating >= current_star %}
+                            <i class="fas fa-star"></i>
+                            {% elif review.rating >= current_star|add:"-0.5" %}
+                            <i class="fas fa-star-half"></i>
+                            {% else %}
+                            <i class="far fa-star"></i>
+                            {% endif %}
+                            {% endwith %}
+                            {% endfor %}
+                            <span>({{ review.rating }})</span>
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        <p class="review-text">{{ review.content }}</p>
+                        
+                    </div>
+
+                    <div class="review-actions d-flex justify-content-between">
+                        <button class="btn btn-link read-more" style="display: none;">Read More</button>
+                        {% if review.user == request.user %}
+                        <form method="POST" action="{% url 'review_service:delete_review' review.id %}#reviews-section" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+            <p>No reviews yet.</p>
+        {% endif %}
+        </div>
+    </div>
+    {{ details.leased_dates|json_script:"leased-dates-data" }}
+    <script>
+        const leasedDates = JSON.parse(document.getElementById('leased-dates-data').textContent);
+        console.log(leasedDates);
+    </script>
+    <script>
+        var lat = "{{ details.lat|default:'' }}";
+        var lon = "{{ details.lon|default:'' }}";
+
+        if (!lat || !lon) {
+            lat = 0;
+            lon = 0;
+        } else {
+            lat = parseFloat(lat);
+            lon = parseFloat(lon);
+        }
+
+        if (lat !== 0 && lon !== 0) {
+            var map = L.map('map').setView([lat, lon], 14);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 22
+            }).addTo(map);
+
+            L.marker([lat, lon]).addTo(map)
+                .bindPopup('{{ details.title }}')
+                .openPopup();
+        } else {
+            document.getElementById('map').innerHTML = "<p>Location not found</p>";
+        }
+
+        // Walk Score
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to set score color based on value
+            function getScoreColor(score) {
+                if (score >= 90) return '#386641'; // Dark green
+                if (score >= 70) return '#a7c957'; // Light green  
+                if (score >= 50) return '#fcbf49'; // Yellow
+                if (score >= 25) return '#f77f00'; // Orange
+                return '#d62828'; // Red
+            }
+            
+            // Fetch walk score for the current property
+            async function fetchWalkScore() {
+                const propertyId = {{ details.id }};
+                try {
+                    const response = await fetch(`/listings/property/${propertyId}/walkscore/`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch Walk Score');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Update the Walk Score display
+                    if (data.walkscore !== undefined) {
+                        const walkScoreElement = document.getElementById('walk-score');
+                        const walkScoreSignal = document.getElementById('walk-score-signal');
+                        console.log(walkScoreElement.textContent)
+                        walkScoreElement.textContent = data.walkscore;
+                        walkScoreSignal.style.backgroundColor = getScoreColor(data.walkscore);
+                    }
+
+                        // Update Bike Score display
+                    if (data.bikescore !== undefined) {
+                        const bikeScoreElement = document.getElementById('bike-score');
+                        const bikeScoreSignal = document.getElementById('bike-score-signal');
+                        bikeScoreElement.textContent = data.bikescore;
+                        bikeScoreSignal.style.backgroundColor = getScoreColor(data.bikescore);
+                    }
+
+                    // Update Transit Score display
+                    if (data.transitscore !== undefined) {
+                        const transitScoreElement = document.getElementById('transit-score');
+                        const transitScoreSignal = document.getElementById('transit-score-signal');
+                        transitScoreElement.textContent = data.transitscore;
+                        transitScoreSignal.style.backgroundColor = getScoreColor(data.transitscore);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching scores:`, error);
+                    document.querySelector('.walk-score-container').innerHTML = 
+                        '<div class="alert alert-warning">Unable to load scores</div>';
+                }
+            }
+            
+            // Call the function
+            fetchWalkScore();
+        });
+
+        // Function to add a read more button for reviews
+        document.addEventListener('DOMContentLoaded', function() {
+            const reviewCards = document.querySelectorAll('.review-card');
+            
+            reviewCards.forEach(card => {
+                const contentContainer = card.querySelector('.review-content');
+                const content = card.querySelector('.review-text');
+                const readMoreBtn = card.querySelector('.read-more');
+                
+                // Check if content is too long
+                const needsReadMore = content.scrollHeight > 70; // ~ height of 3 lines
+                
+                if (needsReadMore) {
+                    // Initially collapse the content
+                    contentContainer.classList.add('collapsed');
+                    readMoreBtn.style.display = 'inline-block';
+                    
+                    // Toggle between expanded and collapsed states
+                    readMoreBtn.addEventListener('click', function() {
+                        if (contentContainer.classList.contains('collapsed')) {
+                            // Expand
+                            contentContainer.classList.remove('collapsed');
+                            contentContainer.classList.add('expanded');
+                            readMoreBtn.textContent = 'Read Less';
+                        } else {
+                            // Collapse
+                            contentContainer.classList.remove('expanded');
+                            contentContainer.classList.add('collapsed');
+                            readMoreBtn.textContent = 'Read More';
+                        }
+                    });
+                }
+            });
+        });
+        // Calendar integration
+
+        // get today
+        const today = moment().toISOString().slice(0, 10);
+        let isTodayInvalid = false;
+
+        // invalid dates from backend
+        const invalidDateRanges = JSON.parse(document.getElementById('leased-dates-data').textContent);
+
+        // build set of all invalid date strings (YYYY-MM-DD)
+        const invalidDatesSet = new Set();
+        
+        // populate set with the invalid dates
+        invalidDateRanges.forEach(range => {
+            let current = new Date(range.start);
+            const end = new Date(range.end);
+
+            while (current <= end) {
+                invalidDatesSet.add(current.toISOString().slice(0, 10));
+                current.setDate(current.getDate() + 1);
+            }
+        })
+
+        // check if today is in the invalid dates
+        if (invalidDatesSet.has(today)) {
+            isTodayInvalid = true;
+        }
+        console.log(isTodayInvalid);
+
+        // Initialize daterangepicker
+        $('#daterange').daterangepicker({
+            isInvalidDate: function(date) {
+                const todayStart = moment().startOf('day');
+                if (date.isBefore(todayStart)) {
+                    return true; // disable past dates
+                }
+
+                // block out the leased dates
+                return invalidDatesSet.has(date.format('YYYY-MM-DD'));
+            },
+            minDate: moment()
+        });
+
+        // set default start
+        if (!isTodayInvalid) {
+            $('#daterange').data('daterangepicker').setStartDate(moment());
+        } else {
+            // find the next valid date
+            let nextValidDate = moment(today);
+            while (invalidDatesSet.has(nextValidDate.format('YYYY-MM-DD'))) {
+                nextValidDate.add(1, 'days');
+            }
+            $('#daterange').data('daterangepicker').setStartDate(nextValidDate);
+            $('#daterange').data('daterangepicker').setEndDate(nextValidDate);
+        }
+
+        // make calendar icon clickable
+        const calendarIcon = document.getElementById('calendar-icon');
+        const daterangeInput = document.getElementById('daterange');
+
+        if (calendarIcon && daterangeInput) {
+            calendarIcon.addEventListener('click', function() {
+                $(daterangeInput).trigger('click');
+            });
+        }
+
+        // on apply, populate the input fields with start and end dates
+        $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+            const startDate = picker.startDate.format('YYYY-MM-DD');
+            const endDate = picker.endDate.format('YYYY-MM-DD');
+
+            // set the values of the input fields
+            document.getElementById('start_date').value = startDate;
+            document.getElementById('end_date').value = endDate;
+        });
+
+        // Function for ensuring lease end date is after start date
+        document.addEventListener("DOMContentLoaded", function () {
+            const leaseForm = document.getElementById("lease-request-form");
+            const startDateInput = document.getElementById("start_date");
+            const endDateInput = document.getElementById("end_date");
+        
+            leaseForm.addEventListener("submit", function (event) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+        
+                if (startDate >= endDate) {
+                    event.preventDefault();
+                    alert("Start date must be before end date.");
+                    return false;
+                }
+            });
+        });
+    </script>
+</div>
+{% endblock %}
