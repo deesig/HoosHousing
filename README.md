@@ -37,7 +37,10 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 Install dependencies:
 
+```
 pip install -r requirements.txt
+```
+
 
 Set up your .env file (using python-decouple) with required environment variables (example provided in .env.example).
 
@@ -48,9 +51,11 @@ Apply migrations and run the server:
 
 🧪 Development & Testing
 
-    Run unit tests:
+Run unit tests:
 
+```
 python manage.py test
+```
 
 Enable Django Extensions shell:
 
